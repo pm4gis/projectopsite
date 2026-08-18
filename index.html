@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Vote for your favourite WMD / FHD Iraq book cover.">
+<title>WMD / FHD Cover Vote</title>
+<script async src="https://counterapi.com/counterapi.embed.js"></script>
+<style>
+:root{color-scheme:dark;--bg:#101010;--card:#191919;--line:#353535;--muted:#aaa;--up:#78d986;--down:#ff7878;--accent:#d8b14a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#eee;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{border-bottom:1px solid #2a2a2a;background:#0b0b0b;padding:24px 18px 18px;text-align:center}
+h1{margin:0;font-size:clamp(30px,6vw,56px);letter-spacing:.02em}
+header p{margin:7px auto 0;max-width:760px;color:#c5c5c5}
+.controls{position:sticky;top:0;z-index:10;background:rgba(16,16,16,.95);backdrop-filter:blur(8px);border-bottom:1px solid #2b2b2b;padding:10px 14px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.controls button,.vote button{border:1px solid #505050;background:#242424;color:#eee;border-radius:7px;padding:8px 11px;cursor:pointer}
+.controls button.active{background:#eee;color:#111;border-color:#eee}
+.grid{max-width:1500px;margin:0 auto;padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:9px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.cover-wrap{position:relative;background:#090909;aspect-ratio:2/3;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:zoom-in}
+.cover-wrap img{width:100%;height:100%;object-fit:contain;display:block}
+.num{position:absolute;top:7px;left:7px;background:rgba(0,0,0,.82);border:1px solid #777;border-radius:5px;padding:3px 7px;font-weight:700}
+.meta{padding:10px}
+.name{min-height:42px;font-size:14px}
+.vote{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.vote button{font-size:15px}
+.vote button:hover{background:#303030}
+.vote button.selected{outline:2px solid #fff;outline-offset:1px}
+.vote button.up.selected{border-color:var(--up)}
+.vote button.down.selected{border-color:var(--down)}
+.score{text-align:center;color:var(--muted);font-size:12px;margin-top:6px}
+.loading{text-align:center;color:#aaa;padding:70px 20px;grid-column:1/-1}
+footer{text-align:center;color:#777;padding:25px 15px 40px}
+#modal{display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.93);padding:18px;align-items:center;justify-content:center}
+#modal.open{display:flex}
+#modal img{max-width:min(94vw,1000px);max-height:88vh;object-fit:contain;box-shadow:0 0 0 1px #555,0 20px 80px #000}
+#modal .close{position:fixed;top:13px;right:15px;background:#222;border:1px solid #777;color:#fff;border-radius:50%;width:42px;height:42px;font-size:25px;cursor:pointer}
+#modal .caption{position:fixed;left:0;right:0;bottom:6px;text-align:center;color:#ddd;text-shadow:0 1px 2px #000}
+@media(max-width:650px){.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:9px}.meta{padding:8px}.name{font-size:13px;min-height:38px}.controls{justify-content:flex-start;overflow:auto;flex-wrap:nowrap}.controls button{white-space:nowrap}}
+</style>
+</head>
+<body>
+<header>
+  <h1>WMD / FHD Cover Vote</h1>
+  <p>Pick the covers that work. No login or account required. Use 👍 or 👎 on as many as you want. Click any cover to see the larger image.</p>
+</header>
+<div class="controls">
+  <button class="active" data-filter="all">All 25</button>
+  <button data-filter="voted">My votes</button>
+  <button data-filter="new">Not voted</button>
+</div>
+<main id="grid" class="grid"><div class="loading">Loading covers…</div></main>
+<footer>FHD cover poll</footer>
+<div id="modal" aria-hidden="true"><button class="close" aria-label="Close">×</button><img alt=""><div class="caption"></div></div>
+<script>window.COVERS=[];</script>
+<script src="covers1.js"></script><script src="covers2.js"></script><script src="covers3.js"></script><script src="covers4.js"></script><script src="covers5.js"></script>
+<script>
+const NS='fhd-wmd-cover-vote-20260818-v2';
+const C=window.COVERS||[];let filter='all';
+const G=document.getElementById('grid');const M=document.getElementById('modal');
+const own=i=>localStorage.getItem('fhd-cover-vote-v2:'+i);
+function n(r){return +(r?.value??r?.count??0)||0}
+function updateNet(card){const u=+(card.querySelector('.upn').textContent||0),d=+(card.querySelector('.downn').textContent||0);card.querySelector('.net').textContent=u-d}
+function read(i,card){if(!window.counterApi)return setTimeout(()=>read(i,card),500);counterApi.read('cover-'+i,'up',NS,{behavior:'vote'},r=>{card.querySelector('.upn').textContent=n(r);updateNet(card)});counterApi.read('cover-'+i,'down',NS,{behavior:'vote'},r=>{card.querySelector('.downn').textContent=n(r);updateNet(card)})}
+function cast(i,a,card){const old=own(i);if(old===a)return;localStorage.setItem('fhd-cover-vote-v2:'+i,a);card.querySelectorAll('.vote button').forEach(b=>b.classList.toggle('selected',b.dataset.v===a));if(window.counterApi){counterApi.increment('cover-'+i,a,NS,{behavior:'vote'},r=>{card.querySelector('.'+a+'n').textContent=n(r);updateNet(card)})}}
+function show(c){M.querySelector('img').src=c.s;M.querySelector('img').alt='Cover '+c.i+': '+c.l;M.querySelector('.caption').textContent=String(c.i).padStart(2,'0')+' · '+c.l;M.classList.add('open');M.setAttribute('aria-hidden','false')}
+function hide(){M.classList.remove('open');M.setAttribute('aria-hidden','true');M.querySelector('img').src=''}
+M.querySelector('.close').onclick=hide;M.onclick=e=>{if(e.target===M)hide()};document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
+function draw(){G.innerHTML='';C.forEach(c=>{const v=own(c.i);if(filter==='voted'&&!v)return;if(filter==='new'&&v)return;const card=document.createElement('article');card.className='card';card.innerHTML=`<div class="cover-wrap"><span class="num">${String(c.i).padStart(2,'0')}</span><img src="${c.s}" alt="Cover ${c.i}: ${c.l}" loading="lazy"></div><div class="meta"><div class="name">${c.l}</div><div class="vote"><button class="up" data-v="up">👍 <span class="upn">0</span></button><button class="down" data-v="down">👎 <span class="downn">0</span></button></div><div class="score">Score <span class="net">0</span></div></div>`;card.querySelector('.cover-wrap').onclick=()=>show(c);card.querySelectorAll('.vote button').forEach(b=>{b.classList.toggle('selected',v===b.dataset.v);b.onclick=()=>cast(c.i,b.dataset.v,card)});G.appendChild(card);read(c.i,card)});if(!G.children.length)G.innerHTML='<div class="loading">Nothing in this view yet.</div>'}
+document.querySelectorAll('[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;draw()});
+draw();
+</script>
+</body></html>
